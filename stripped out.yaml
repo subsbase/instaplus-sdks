@@ -1,0 +1,250 @@
+openapi: 3.0.1
+info:
+  title: InstaPlus.Api
+  version: '1.0'
+paths:
+  /group-order:
+    put:
+      tags:
+        - GroupOrder
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: array
+                  items:
+                    properties:
+                      externalId: 
+                        type: string
+                      amount:
+                        type: number
+                notes: 
+                  type: string
+                receivingAccountId:
+                  description: "Receiving Account Id can be retrieved from Instaplus Dashboard"
+                  type: string
+                validityInHours:
+                  type: number
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Return Group Order Id. Child orders can be queried using  GET /group-order/{id}
+        '401':
+            description: Unallowed
+  /group-order/{id}:
+    get:
+      tags:
+        - GroupOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupOrder'
+  /order:
+    put:
+      tags:
+        - Order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                externalId:
+                  type: string
+                amount:
+                  type: number
+                receivingAccountId:
+                  description: "Receiving Account Id can be retrieved from Instaplus Dashboard"
+                  type: string
+                validityInHours:
+                  type: number
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Return Order Id. Checkout link would be https://checkout.insta-plus.app?order={orderId}
+        '401':
+            description: Unallowed
+  /order/{id}:
+    get:
+      tags:
+        - Order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/order'
+  /user/login:
+    post:
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userLogin'
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    userLogin:
+      type: object
+      properties:
+        userId:
+          type: string
+        password:
+          type: string
+    groupOrder:
+      type: object
+      properties:
+        id: 
+          type: string
+        totalAmount:
+          type: number
+        collectedAmount:
+          type: number
+        createdAt:
+          type: string
+          description: ISO Datetime
+        expiresAt:
+          type: string
+          description: ISO Datetime
+        to:
+          $ref: '#/components/schemas/receivingAccount'
+        receivingAccountType:
+          $ref: '#/components/schemas/receivingAccountType'
+        notes:
+          type: string
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/order'
+
+    order:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+        createdAt:
+          description: ISO Datetime
+          type: string
+        amount:
+          type: number
+        collectedAmount:
+          type: number
+        to:
+          $ref: '#/components/schemas/receivingAccount'
+        receivingAccountType:
+          $ref: '#/components/schemas/receivingAccountType'
+        expiresAt:
+          description: ISO Datetime
+          type: string
+        notes:
+          type: string
+        userAccountId:
+          type: string
+        transactionReceipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/transactionReceipt'
+
+    receivingAccount:
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/accountReceivingAccount'
+        - $ref: '#/components/schemas/walletReceivingAccount'
+        - $ref: '#/components/schemas/ipaReceivingAccount'
+        - $ref: '#/components/schemas/bankReceivingAccount'
+        - $ref: '#/components/schemas/ibanReceivingAccount'
+
+    receivingAccountType:
+      type: string
+      enum: 
+        - IPA
+        - WalletNumber
+        - AccountNumber
+        - BankAccount
+        - BankIban  
+    transactionReceipt:
+      type: object
+      properties:
+        instapayReference: 
+          type: string
+        timestamp:
+          type: string
+          description: ISO Datetime
+        amount:
+          type: number
+        from:
+          type: object
+          properties:
+            ipa:
+              type: string
+
+    accountReceivingAccount:
+      type: object
+      properties:
+        number:
+          type: string
+    
+    walletReceivingAccount:
+      type: object
+      properties:
+        number:
+          type: string
+
+    ipaReceivingAccount:
+      type: object
+      properties:
+        ipa: 
+          type: string
+    
+    bankReceivingAccount:
+      type: object
+      properties:
+        bankCode:
+          type: string
+        accountNumber:
+          type: string
+        receiverName:
+          type: string
+
+    ibanReceivingAccount:
+      type: object
+      properties:
+        iban:
+          type: string
+        receiverName:
+          type: string
