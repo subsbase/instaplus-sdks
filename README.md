@@ -1,22 +1,3 @@
----
-title: InstaPlus.Api v1.0
-language_tabs:
-  - shell: Shell
-  - http: HTTP
-  - javascript: JavaScript
-  - ruby: Ruby
-  - python: Python
-  - php: PHP
-  - java: Java
-  - go: Go
-toc_footers: []
-includes: []
-search: true
-highlight_theme: darkula
-headingLevel: 2
-
----
-
 <!-- Generator: Widdershins v4.0.1 -->
 
 <h1 id="instaplus-api">InstaPlus.Api v1.0</h1>
@@ -28,7 +9,7 @@ headingLevel: 2
 ## put__group-order
 
 > Code samples
-
+### shell
 ```shell
 # You can also use wget
 curl -X PUT /group-order \
@@ -36,7 +17,7 @@ curl -X PUT /group-order \
   -H 'Accept: application/json'
 
 ```
-
+### http
 ```http
 PUT /group-order HTTP/1.1
 
@@ -44,7 +25,7 @@ Content-Type: application/json
 Accept: application/json
 
 ```
-
+### javascript
 ```javascript
 const inputBody = '{
   "from": [
@@ -75,7 +56,7 @@ fetch('/group-order',
 });
 
 ```
-
+### ruby
 ```ruby
 require 'rest-client'
 require 'json'
@@ -93,6 +74,7 @@ p JSON.parse(result)
 
 ```
 
+### python
 ```python
 import requests
 headers = {
@@ -105,7 +87,7 @@ r = requests.put('/group-order', headers = headers)
 print(r.json())
 
 ```
-
+### php
 ```php
 <?php
 
@@ -137,7 +119,7 @@ try {
  // ...
 
 ```
-
+### java
 ```java
 URL obj = new URL("/group-order");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -154,7 +136,7 @@ in.close();
 System.out.println(response.toString());
 
 ```
-
+### go
 ```go
 package main
 
@@ -233,21 +215,21 @@ This operation does not require authentication
 ## get__group-order_{id}
 
 > Code samples
-
+### shell
 ```shell
 # You can also use wget
 curl -X GET /group-order/{id} \
   -H 'Accept: application/json'
 
 ```
-
+### http
 ```http
 GET /group-order/{id} HTTP/1.1
 
 Accept: application/json
 
 ```
-
+### javascript
 ```javascript
 
 const headers = {
@@ -267,7 +249,7 @@ fetch('/group-order/{id}',
 });
 
 ```
-
+### ruby
 ```ruby
 require 'rest-client'
 require 'json'
@@ -283,7 +265,7 @@ result = RestClient.get '/group-order/{id}',
 p JSON.parse(result)
 
 ```
-
+### python
 ```python
 import requests
 headers = {
@@ -295,7 +277,7 @@ r = requests.get('/group-order/{id}', headers = headers)
 print(r.json())
 
 ```
-
+### php
 ```php
 <?php
 
@@ -326,7 +308,7 @@ try {
  // ...
 
 ```
-
+### java
 ```java
 URL obj = new URL("/group-order/{id}");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -343,7 +325,7 @@ in.close();
 System.out.println(response.toString());
 
 ```
-
+### go
 ```go
 package main
 
@@ -437,7 +419,7 @@ This operation does not require authentication
 ## put__order
 
 > Code samples
-
+### shell
 ```shell
 # You can also use wget
 curl -X PUT /order \
@@ -445,7 +427,7 @@ curl -X PUT /order \
   -H 'Accept: application/json'
 
 ```
-
+### http
 ```http
 PUT /order HTTP/1.1
 
@@ -453,7 +435,7 @@ Content-Type: application/json
 Accept: application/json
 
 ```
-
+### javascript
 ```javascript
 const inputBody = '{
   "externalId": "string",
@@ -480,7 +462,7 @@ fetch('/order',
 });
 
 ```
-
+### ruby
 ```ruby
 require 'rest-client'
 require 'json'
@@ -497,7 +479,7 @@ result = RestClient.put '/order',
 p JSON.parse(result)
 
 ```
-
+### python
 ```python
 import requests
 headers = {
@@ -510,7 +492,7 @@ r = requests.put('/order', headers = headers)
 print(r.json())
 
 ```
-
+### php
 ```php
 <?php
 
@@ -542,7 +524,7 @@ try {
  // ...
 
 ```
-
+### java
 ```java
 URL obj = new URL("/order");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -559,7 +541,7 @@ in.close();
 System.out.println(response.toString());
 
 ```
-
+### go
 ```go
 package main
 
@@ -633,21 +615,21 @@ This operation does not require authentication
 ## get__order_{id}
 
 > Code samples
-
+### shell
 ```shell
 # You can also use wget
 curl -X GET /order/{id} \
   -H 'Accept: application/json'
 
 ```
-
+### http
 ```http
 GET /order/{id} HTTP/1.1
 
 Accept: application/json
 
 ```
-
+### javascript
 ```javascript
 
 const headers = {
@@ -667,7 +649,7 @@ fetch('/order/{id}',
 });
 
 ```
-
+### ruby
 ```ruby
 require 'rest-client'
 require 'json'
@@ -683,7 +665,7 @@ result = RestClient.get '/order/{id}',
 p JSON.parse(result)
 
 ```
-
+### python
 ```python
 import requests
 headers = {
@@ -695,7 +677,7 @@ r = requests.get('/order/{id}', headers = headers)
 print(r.json())
 
 ```
-
+### php
 ```php
 <?php
 
@@ -726,7 +708,7 @@ try {
  // ...
 
 ```
-
+### java
 ```java
 URL obj = new URL("/order/{id}");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -743,7 +725,7 @@ in.close();
 System.out.println(response.toString());
 
 ```
-
+### go
 ```go
 package main
 
@@ -823,21 +805,21 @@ This operation does not require authentication
 ## post__user_login
 
 > Code samples
-
+### shell
 ```shell
 # You can also use wget
 curl -X POST /user/login \
   -H 'Content-Type: application/json'
 
 ```
-
+### http
 ```http
 POST /user/login HTTP/1.1
 
 Content-Type: application/json
 
 ```
-
+### javascript
 ```javascript
 const inputBody = '{
   "userId": "string",
@@ -860,7 +842,7 @@ fetch('/user/login',
 });
 
 ```
-
+### ruby
 ```ruby
 require 'rest-client'
 require 'json'
@@ -876,7 +858,7 @@ result = RestClient.post '/user/login',
 p JSON.parse(result)
 
 ```
-
+### python
 ```python
 import requests
 headers = {
@@ -888,7 +870,7 @@ r = requests.post('/user/login', headers = headers)
 print(r.json())
 
 ```
-
+### php
 ```php
 <?php
 
@@ -919,7 +901,7 @@ try {
  // ...
 
 ```
-
+### java
 ```java
 URL obj = new URL("/user/login");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -936,7 +918,7 @@ in.close();
 System.out.println(response.toString());
 
 ```
-
+### go
 ```go
 package main
 
