@@ -2,6 +2,9 @@
 
 <h1 id="instaplus-api">InstaPlus.Api v1.0</h1>
 
+#Visualise Open API Specs
+[Open Api Spec](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/subsbase/instaplus-sdks/master/openapi-spec.yaml)
+
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
 <h1 id="instaplus-api-grouporder">GroupOrder</h1>

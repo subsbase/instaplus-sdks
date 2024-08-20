@@ -173,8 +173,6 @@ components:
           type: string
         notes:
           type: string
-        userAccountId:
-          type: string
         transactionReceipts:
           type: array
           items:

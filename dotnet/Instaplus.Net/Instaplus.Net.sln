@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Instaplus.Net", "Instaplus.Net\Instaplus.Net.csproj", "{F21E0860-F989-49C3-B529-F1AC28F005C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Instaplus.Net.Tests", "Instaplus.Net.Tests\Instaplus.Net.Tests.csproj", "{4CA47B7F-E33B-450B-B796-093EC7721909}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{F21E0860-F989-49C3-B529-F1AC28F005C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F21E0860-F989-49C3-B529-F1AC28F005C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F21E0860-F989-49C3-B529-F1AC28F005C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CA47B7F-E33B-450B-B796-093EC7721909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CA47B7F-E33B-450B-B796-093EC7721909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CA47B7F-E33B-450B-B796-093EC7721909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CA47B7F-E33B-450B-B796-093EC7721909}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
