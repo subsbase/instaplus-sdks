@@ -5,8 +5,6 @@ using System.Text.Json;
 using Instaplus.Net.Models;
 using Instaplus.Net.Requests;
 using Instaplus.Net.Utils;
-using Polly;
-using Polly.Registry;
 
 namespace Instaplus.Net;
 
@@ -37,12 +35,114 @@ public class InstaplusApi
     
     public async Task<Order?> GetOrder(string orderId)
     {
-        return await GetAsync<Order>($"/order/{orderId}");
+        var order = await GetAsync($"/order/{orderId}",new
+        {
+            Id = "",
+            ExternalId = "",
+            CreatedAt = new DateTime(),
+            ExpiresAt = new DateTime(),
+            Amount = 0m,
+            CollectedAmount = 0m,
+            To = new object(),
+            ReceivingAccountId = "",
+            ReceivingAccountType = "",
+            Notes ="",
+            TransactionReceipts = new []
+            {
+                new
+                {
+                    InstapayReference = "",
+                    Timestamp = new DateTime(),
+                    Amount = 0m,
+                    From = new
+                    {
+                        IPA = "",
+                        Link = ""
+                    }
+                }
+            }
+        });
+        
+        if(order == null)
+        {
+            return null;
+        }
+
+        return new Order()
+        {
+            Id = order.Id,
+            ExternalId = order.ExternalId,
+            CreatedAt = order.CreatedAt,
+            ExpiresAtUtc = order.ExpiresAt,
+            Amount = order.Amount,
+            CollectedAmount = order.CollectedAmount,
+            Notes = order.Notes,
+            To = JsonSerializer.Serialize(order.To),
+            ReceivingAccountId = order.ReceivingAccountId,
+            ReceivingAccountType = Enum.Parse<ReceivingAccountType>(order.ReceivingAccountType, true),
+            
+            TransactionReceipts = order.TransactionReceipts?.Select(t => new TransactionReceipt()
+            {
+                InstapayReference = t.InstapayReference,
+                Timestamp = t.Timestamp,
+                From = new ReceivingAccountInfo.InstaPay() {IPA = t.From.IPA, Link = t.From.Link},
+                Amount = t.Amount,
+            }).ToList()
+        };
     }
 
     public async Task<GroupOrder?> GetGroupOrder(string groupId)
     {
-        return await GetAsync<GroupOrder>($"/group-order/{groupId}");
+        var groupOrder = await GetAsync($"/group-order/{groupId}", new
+        {
+            Id  = "",
+            TotalAmount = 0m,
+            CollectedAmount = 0m,
+            CreatedAt = new DateTime(),
+            ExpiresAt = new DateTime(),
+            To = new object(),
+            ReceivingAccountId = "",
+            ReceivingAccountType = "",
+            Notes = "",
+            Orders = new []
+            {
+                new
+                {
+                    OrderId = "",
+                    TotalAmount = 0m,
+                    CollectedAmount = 0m,
+                    ExternalId = ""
+                }
+            }
+        });
+
+        if (groupOrder == null)
+        {
+            return null;
+        }
+        return new GroupOrder()
+        {
+            Id = groupOrder.Id,
+            TotalAmount = groupOrder.TotalAmount,
+            CollectedAmount = groupOrder.CollectedAmount,
+            CreatedAt = groupOrder.CreatedAt,
+            ExpiresAt = groupOrder.ExpiresAt,
+            
+            To = JsonSerializer.Serialize(groupOrder.To),
+            
+            ReceivingAccountId = groupOrder.ReceivingAccountId,
+            ReceivingAccountType = Enum.Parse<ReceivingAccountType>(groupOrder.ReceivingAccountType, true),
+            Notes = groupOrder.Notes,
+            
+            Orders = groupOrder.Orders.Select( o => new GroupOrder.Order()
+            {
+                Id = o.OrderId,
+                Amount = o.TotalAmount,
+                CollectedAmount = o.CollectedAmount,
+                ExternalId = o.ExternalId
+            }).ToList()
+            
+        };
     }
 
     public async Task<string?> CreateOrder(NewOrder newOrder)
@@ -90,7 +190,7 @@ public class InstaplusApi
     }
     private async Task<TSuccessResponse?> PostAsync<TPayload, TSuccessResponse>(string url, TPayload payload, TSuccessResponse successResponse)
     {
-        var serialized = JsonSerializer.Serialize(payload, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = false});
+        var serialized = JsonSerializer.Serialize(payload, JsonSerializerOptionsUtils.DefaultJsonSerializerOptions);
         var content = new StringContent(serialized, Encoding.UTF8, "application/json");
 
         var retryPolicy = PollyUtils.GetRetryPolicy();
@@ -100,14 +200,15 @@ public class InstaplusApi
 
         if (response.IsSuccessStatusCode)
         {
-            return await JsonSerializer.DeserializeAsync<TSuccessResponse>(await response.Content.ReadAsStreamAsync(),
-                new JsonSerializerOptions { AllowTrailingCommas = true, PropertyNameCaseInsensitive = true });
+            return await JsonSerializer.DeserializeAsync<TSuccessResponse>(
+                await response.Content.ReadAsStreamAsync(), JsonSerializerOptionsUtils.DefaultJsonSerializerOptions
+                );
         }
 
         throw new InstaplusApiException($"API Call Failed: {(int)response.StatusCode}:{response.ReasonPhrase} \n\r  {await response.Content.ReadAsStringAsync()}");
     }
     
-    private async Task<TSuccessResponse?> GetAsync<TSuccessResponse>(string url)
+    private async Task<TSuccessResponse?> GetAsync<TSuccessResponse>(string url, TSuccessResponse successResponse)
     {
        var retryPolicy = PollyUtils.GetRetryPolicy();
         
@@ -116,33 +217,18 @@ public class InstaplusApi
 
         if (response.IsSuccessStatusCode)
         {
-            var content = await response.Content.ReadAsStringAsync();
-            var deserialized = JsonSerializer.Deserialize<TSuccessResponse>(content, GetJsonSerializationOptions());
-            
-            return await JsonSerializer.DeserializeAsync<TSuccessResponse>(await response.Content.ReadAsStreamAsync(), GetJsonSerializationOptions());
+            return await JsonSerializer.DeserializeAsync<TSuccessResponse>(
+                await response.Content.ReadAsStreamAsync(), JsonSerializerOptionsUtils.DefaultJsonSerializerOptions
+                );
         }
 
         throw new InstaplusApiException($"API Call Failed: {(int)response.StatusCode}:{response.ReasonPhrase} \n\r  {await response.Content.ReadAsStringAsync()}");
     }
-
-    private JsonSerializerOptions? GetJsonSerializationOptions()
-    {
-        return new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters =
-            {
-                new CustomJsonConverterForString(),
-                new CustomJsonConverterForDecimal(),
-                new CustomJsonConverterForDateTime()
-            }
-        };
-    }
-
+    
     private async Task<TSuccessResponse?> AuthorizedPutAsync<TPayload, TSuccessResponse>(string url, TPayload payload, TSuccessResponse successResponse)
         where TSuccessResponse : class
     {
-        var serialized = JsonSerializer.Serialize(payload, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = false});
+        var serialized = JsonSerializer.Serialize(payload,JsonSerializerOptionsUtils.DefaultJsonSerializerOptions);
         var content = new StringContent(serialized, Encoding.UTF8, "application/json");
 
         var retryPolicy = PollyUtils.GetRetryPolicy();
@@ -157,8 +243,9 @@ public class InstaplusApi
         {
             return typeof(TSuccessResponse) == typeof(string)
                 ? await response.Content.ReadAsStringAsync() as TSuccessResponse
-                : await JsonSerializer.DeserializeAsync<TSuccessResponse>(await response.Content.ReadAsStreamAsync(),
-                new JsonSerializerOptions { AllowTrailingCommas = true, PropertyNameCaseInsensitive = true });
+                : await JsonSerializer.DeserializeAsync<TSuccessResponse>(
+                    await response.Content.ReadAsStreamAsync(), JsonSerializerOptionsUtils.DefaultJsonSerializerOptions
+                    );
         }
 
         throw new InstaplusApiException($"API Call Failed: {(int)response.StatusCode}:{response.ReasonPhrase} \n\r  {await response.Content.ReadAsStringAsync()}");

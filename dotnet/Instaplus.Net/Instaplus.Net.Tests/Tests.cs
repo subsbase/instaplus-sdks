@@ -12,7 +12,7 @@ public class Tests
         
         Assert.DoesNotThrow(() =>
         {
-            var api = new InstaplusApi("farag", "123456");
+            var api = new InstaplusApi("{userId}", "{password}");
         });
     }
     
@@ -22,14 +22,14 @@ public class Tests
         
         Assert.DoesNotThrow(() =>
         {
-            var api = new InstaplusApi("farag", "123456");
+            var api = new InstaplusApi("{userId}", "{password}");
             var orderId = api.CreateOrder(new NewOrder()
             {
                 ExternalId = "some-ref",
                 Amount = 123.45m,
                 Notes = "some notes",
                 ValidityInHours = 2,
-                ReceivingAccountId = "m4quij"
+                ReceivingAccountId = "{accountId}"
             }).GetAwaiter().GetResult();
             
             Assert.That(orderId, Is.Not.Null);
@@ -42,13 +42,13 @@ public class Tests
         
         Assert.DoesNotThrow(() =>
         {
-            var api = new InstaplusApi("farag", "123456");
+            var api = new InstaplusApi("{userId}", "{password}");
             var groupId = api.CreateGroupOrder(new NewGroupOrder()
             {
                 From = new []{ new NewGroupOrder.Order { Amount = 123.45m, ExternalId = "group-order-order-ref"}},
                 Notes = "some notes",
                 ValidityInHours = 2,
-                ReceivingAccountId = "m4quij"
+                ReceivingAccountId = "{accountId}"
             }).GetAwaiter().GetResult();
             
             Assert.That(groupId, Is.Not.Null);
@@ -61,8 +61,8 @@ public class Tests
         
         Assert.DoesNotThrow(() =>
         {
-            var api = new InstaplusApi("farag", "123456");
-            var order = api.GetOrder("ZAqdYuyC").GetAwaiter().GetResult();
+            var api = new InstaplusApi("{userId}", "{password}");
+            var order = api.GetOrder("{orderId}").GetAwaiter().GetResult();
             
             Assert.That(order, Is.Not.Null);
         });
@@ -74,8 +74,8 @@ public class Tests
         
         Assert.DoesNotThrow(() =>
         {
-            var api = new InstaplusApi("farag", "123456");
-            var groupOrder = api.GetGroupOrder("WTNcM5I2").GetAwaiter().GetResult();
+            var api = new InstaplusApi("{userId}", "{password}");
+            var groupOrder = api.GetGroupOrder("{groupOrderId}").GetAwaiter().GetResult();
             
             Assert.That(groupOrder, Is.Not.Null);
         });

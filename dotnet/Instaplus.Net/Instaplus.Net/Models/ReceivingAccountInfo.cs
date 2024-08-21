@@ -2,32 +2,32 @@
 
 public class ReceivingAccountInfo
 {
-    public sealed class Account 
+    public sealed class Account  : ReceivingAccountInfo
     {
-        public string Number { get; internal set; } = default!;
+        public string Number { get; set; } = default!;
     }
 
-    public sealed class Wallet
+    public sealed class Wallet : ReceivingAccountInfo
     {
-        public string Number { get; internal set; } = default!;
+        public string Number { get; set; } = default!;
     }
 
-    public sealed class BankIban
+    public sealed class BankIban : ReceivingAccountInfo
     {
-        public string Iban { get; internal set; } = default!;
-        public string ReceiverName { get; internal set; } = default!;
+        public string Iban { get; set; } = default!;
+        public string ReceiverName { get; set; } = default!;
     }
 
-    public sealed class BankAccount
+    public sealed class BankAccount : ReceivingAccountInfo
     {
-        public string BankCode { get; internal set; } = default!;
-        public string AccountNumber { get; internal set; } = default!;
-        public string ReceiverName { get; internal set; } = default!;
+        public string BankCode { get; set; } = default!;
+        public string AccountNumber { get; set; } = default!;
+        public string ReceiverName { get; set; } = default!;
     }
 
-    public sealed class InstaPay
+    public sealed class InstaPay : ReceivingAccountInfo
     {
-        public string IPA { get; internal set; } = default!;
-        public string? Link { get; internal set; }
+        public string IPA { get; set; } = default!;
+        public string? Link { get; set; }
     }
 }
