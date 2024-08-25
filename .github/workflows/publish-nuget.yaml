@@ -1,0 +1,156 @@
+name: NuGet Package CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore: 
+      - .github/**
+  release:
+    types:
+      - published
+
+jobs:
+  setup: 
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs: 
+      latest-release: ${{ steps.get-latest-release.outputs.latest-release }}
+      release-type: ${{ steps.release-type.outputs.release-type}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+          fetch-tags: 'true'
+          
+      - name: Get Latest Release
+        id: get-latest-release
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo latest-release="$(gh release view --json tagName -q '.tagName')" >> $GITHUB_OUTPUT
+
+      - name: Set release type based on commit messages
+        id: release-type
+        env:
+          LATEST_TAG: ${{ steps.get-latest-release.outputs.latest-release }}
+        run: |
+          release_type="Patch"
+          commit_messages="$(git log $LATEST_TAG...master --no-merges --pretty='format:%s')"
+
+          while IFS= read -r line; do
+            # Convert the line to lowercase
+            line_lower=$(echo "$line" | tr '[:upper:]' '[:lower:]')
+
+            if [[ "$line_lower" == release/* ]]; then
+              release_type="Major";
+              break;
+            elif [[ "$line_lower" == feature/* ]]; then
+              release_type="Minor";
+              break;
+            elif [[ "$line_lower" == hotfix/* ]]; then
+              release_type="Patch";
+            fi
+          done <<< "$commit_messages";
+
+          echo release-type="$release_type" >> $GITHUB_OUTPUT
+      
+  build-and-publish-pre-release:
+    name: Build and Publish Pre-Release Package
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+          fetch-tags: 'true'
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x' # Adjust as needed
+            
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Set Release Version 
+        id: release-version
+        env: 
+          LATEST_TAG: ${{ needs.setup.outputs.latest-release }}
+          RELEASE_TYPE: ${{ needs.setup.outputs.release-type }}
+        run: |
+          latest_tag="$LATEST_TAG"
+          version="${latest_tag#v}"
+          IFS='.' read -r major minor patch <<< "$version"
+          
+          if [[ "$RELEASE_TYPE" == "Major" ]]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [[ "$RELEASE_TYPE" == "Minor" ]]; then
+            minor=$((minor + 1))
+            patch=0
+          elif [[ "$RELEASE_TYPE" == "Patch" ]]; then
+            patch=$((patch + 1))
+          fi
+
+          echo release-version="v$major.$minor.$patch" >> $GITHUB_OUTPUT
+
+      - name: Build the NuGet package
+        env: 
+          RELEASE_VERSION: ${{ steps.release-version.outputs.release-version }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: dotnet pack  -p:VersionPrefix="$RELEASE_VERSION" -p:VersionSuffix="rc.$RUN_NUMBER" --configuration Release --output ./output
+
+      - name: Validate NuGet package
+        run: dotnet nuget verify ./output/*.nupkg
+
+      - name: Publish pre-release package to NuGet
+        run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json
+      
+      - name: Persist Pre-release Version
+        env: 
+          RELEASE_VERSION: ${{ steps.release-version.outputs.release-version }}
+          RUN_NUMBER: ${{ github.run_number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh secret set LATEST_PRE_RELEASE_VERSION -b="$RELEASE_VERSION-rc.$RUN_NUMBER"
+      
+
+  # Job for Release Event (Published)
+  repackage-and-publish-stable-release:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    needs: setup
+    environment: Production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x' # Adjust as needed
+      
+      - name: Get Latest Pre-Released Version
+        id: latest-pre-released-version
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo latest-pre-released-version="$(gh secret get LATEST_PRE_RELEASE_VERSION)" >> $GITHUB_OUTPUT
+      
+      - name: Download pre-release package
+        env: 
+          LATEST_PRE_RELEASE_VERSION: ${{ steps.latest-pre-released-version.outputs.latest-pre-released-version }}
+        run: |
+          curl -LO "https://www.nuget.org/api/v2/package/Instaplus.Net/$LATEST_PRE_RELEASE_VERSION"
+
+      - name: Repackage as a stable release
+        run: |
+          dotnet nuget add source ./Instaplus.Net.*.nupkg -n local
+          dotnet pack  -p:VersionSuffix=""  --configuration Release --output ./output
+
+      - name: Publish stable package to NuGet
+        run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json
