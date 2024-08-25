@@ -97,7 +97,7 @@ jobs:
             patch=$((patch + 1))
           fi
 
-          echo release-version="v$major.$minor.$patch" >> $GITHUB_OUTPUT
+          echo release-version="$major.$minor.$patch" >> $GITHUB_OUTPUT
 
       - name: Build the NuGet package
         env: 
