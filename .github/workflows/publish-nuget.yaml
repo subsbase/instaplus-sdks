@@ -105,16 +105,7 @@ jobs:
         run: dotnet pack  -p:VersionPrefix="$RELEASE_VERSION" -p:VersionSuffix="rc.$RUN_NUMBER" --configuration Release --output ./output
 
       - name: Publish pre-release package to NuGet
-        run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json
-      
-      - name: Persist Pre-release Version
-        env: 
-          RELEASE_VERSION: ${{ steps.release-version.outputs.release-version }}
-          RUN_NUMBER: ${{ github.run_number }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh secret set LATEST_PRE_RELEASE_VERSION -b="$RELEASE_VERSION-rc.$RUN_NUMBER"
-      
+        run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json      
 
   # Job for Release Event (Published)
   repackage-and-publish-stable-release:
@@ -129,10 +120,18 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
-
+      
+      - name: Get Latest Pre-Released Version
+        id: latest-version
+        run: |
+          latest_version=$(dotnet package search Instaplus.Net --source nuget.org --prerelease --format json | \
+          jq -r '.searchResult[].packages[] | select(.id == "Instaplus.Net") | .latestVersion')
+          
+          echo latest-version="$latest_version" >> $GITHUB_OUTPUT
+        
       - name: Download pre-release package
         env: 
-          LATEST_PRE_RELEASE_VERSION: ${{ secrets.LATEST_PRE_RELEASE_VERSION }}
+          LATEST_PRE_RELEASE_VERSION: ${{ steps.latest-version.outputs.latest-version }}
         run: |
           curl -LO "https://www.nuget.org/api/v2/package/Instaplus.Net/$LATEST_PRE_RELEASE_VERSION"
 
