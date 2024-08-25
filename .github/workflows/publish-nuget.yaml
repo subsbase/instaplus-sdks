@@ -12,24 +12,37 @@ on:
       - published
 
 jobs:
-  setup: 
-    name: Setup
+  build-and-publish-pre-release:
+    name: Build and Publish Pre-Release Package
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    outputs: 
-      latest-release: ${{ steps.get-latest-release.outputs.latest-release }}
-      release-type: ${{ steps.release-type.outputs.release-type}}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: '0'
           fetch-tags: 'true'
-          
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x' # Adjust as needed
+
+      - name: Restore dependencies
+        run: dotnet restore
+
       - name: Get Latest Release
         id: get-latest-release
         env: 
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo latest-release="$(gh release view --json tagName -q '.tagName')" >> $GITHUB_OUTPUT
+        run:
+          latest_release=$(gh release view --json tagName -q '.tagName' || echo "")
+          
+          if [ -z "$latest_release" ]; then
+            latest_release='v1.0.0';
+          fi
+
+          echo latest-release="$latest_release" >> $GITHUB_OUTPUT
 
       - name: Set release type based on commit messages
         id: release-type
@@ -37,7 +50,13 @@ jobs:
           LATEST_TAG: ${{ steps.get-latest-release.outputs.latest-release }}
         run: |
           release_type="Patch"
-          commit_messages="$(git log $LATEST_TAG...master --no-merges --pretty='format:%s')"
+
+          if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
+            commit_messages=$(git log $LATEST_TAG...master --no-merges --pretty='format:%s')
+          else
+            echo "Tag $LATEST_TAG does not exist. Using entire branch history."
+            commit_messages=$(git log --no-merges --pretty='format:%s')
+          fi
 
           while IFS= read -r line; do
             # Convert the line to lowercase
@@ -55,32 +74,12 @@ jobs:
           done <<< "$commit_messages";
 
           echo release-type="$release_type" >> $GITHUB_OUTPUT
-      
-  build-and-publish-pre-release:
-    name: Build and Publish Pre-Release Package
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: '0'
-          fetch-tags: 'true'
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.x' # Adjust as needed
-            
-      - name: Restore dependencies
-        run: dotnet restore
-      
       - name: Set Release Version 
         id: release-version
         env: 
-          LATEST_TAG: ${{ needs.setup.outputs.latest-release }}
-          RELEASE_TYPE: ${{ needs.setup.outputs.release-type }}
+          LATEST_TAG: ${{ steps.get-latest-release.outputs.latest-release }}
+          RELEASE_TYPE: ${{ steps.release-type.outputs.release-type }}
         run: |
           latest_tag="$LATEST_TAG"
           version="${latest_tag#v}"
@@ -121,26 +120,19 @@ jobs:
   repackage-and-publish-stable-release:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    needs: setup
-    environment: Production
+    environment: Production ## Marking the job as part of production environment which will make it needs a approval
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x' # Adjust as needed
-      
-      - name: Get Latest Pre-Released Version
-        id: latest-pre-released-version
-        env: 
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo latest-pre-released-version="$(gh secret get LATEST_PRE_RELEASE_VERSION)" >> $GITHUB_OUTPUT
-      
+          dotnet-version: '8.x'
+
       - name: Download pre-release package
         env: 
-          LATEST_PRE_RELEASE_VERSION: ${{ steps.latest-pre-released-version.outputs.latest-pre-released-version }}
+          LATEST_PRE_RELEASE_VERSION: ${{ secrets.LATEST_PRE_RELEASE_VERSION }}
         run: |
           curl -LO "https://www.nuget.org/api/v2/package/Instaplus.Net/$LATEST_PRE_RELEASE_VERSION"
 
