@@ -145,7 +145,7 @@ jobs:
         run: |
           mkdir package
           unzip instaplus.net.$LATEST_PRE_RELEASE_VERSION.nupkg -d ./package/
-          nuget pack ./package/Instaplus.Net.nuspec -Version "$stable_version" -Properties Configuration=Release -OutputDirectory ./output
+          nuget pack ./package/Instaplus.Net.nuspec -Version "$STABLE_VERSION" -Properties Configuration=Release -OutputDirectory ./output
 
       - name: Publish stable package to NuGet
         run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json
