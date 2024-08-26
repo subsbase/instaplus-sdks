@@ -141,6 +141,7 @@ jobs:
 
       - name: Repackage as a stable release
         env: 
+          LATEST_PRE_RELEASE_VERSION: ${{ steps.versions.outputs.latest-version }}
           STABLE_VERSION: ${{ steps.versions.outputs.stable-version }}
         run: |
           mkdir package
