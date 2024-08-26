@@ -113,32 +113,39 @@ jobs:
     runs-on: ubuntu-latest
     environment: Production ## Marking the job as part of production environment which will make it needs a approval
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
       
+      - name: Install NuGet CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nuget
+
       - name: Get Latest Pre-Released Version
-        id: latest-version
+        id: versions
         run: |
           latest_version=$(dotnet package search Instaplus.Net --source nuget.org --prerelease --format json | \
           jq -r '.searchResult[].packages[] | select(.id == "Instaplus.Net") | .latestVersion')
-          
+          stable_version=${latest_version//-*/}
+
           echo latest-version="$latest_version" >> $GITHUB_OUTPUT
+          echo stable-version="$stable_version" >> $GITHUB_OUTPUT
         
       - name: Download pre-release package
         env: 
-          LATEST_PRE_RELEASE_VERSION: ${{ steps.latest-version.outputs.latest-version }}
+          LATEST_PRE_RELEASE_VERSION: ${{ steps.versions.outputs.latest-version }}
         run: |
-          curl -LO "https://www.nuget.org/api/v2/package/Instaplus.Net/$LATEST_PRE_RELEASE_VERSION"
+          curl -O "https://api.nuget.org/v3-flatcontainer/instaplus.net/$LATEST_PRE_RELEASE_VERSION/instaplus.net.$LATEST_PRE_RELEASE_VERSION.nupkg"
 
       - name: Repackage as a stable release
+        env: 
+          STABLE_VERSION: ${{ steps.versions.outputs.stable-version }}
         run: |
-          dotnet nuget add source ./Instaplus.Net.*.nupkg -n local
-          dotnet pack  -p:VersionSuffix=""  --configuration Release --output ./output
+          mkdir package
+          unzip instaplus.net.$LATEST_PRE_RELEASE_VERSION.nupkg -d ./package/
+          nuget pack ./package/Instaplus.Net.nuspec -Version "$stable_version" -Properties Configuration=Release -OutputDirectory ./output
 
       - name: Publish stable package to NuGet
         run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json
