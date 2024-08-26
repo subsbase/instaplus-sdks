@@ -29,7 +29,7 @@ jobs:
           dotnet-version: '8.x' # Adjust as needed
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./dotnet/Instaplus.Net/
 
       - name: Get Latest Release
         id: get-latest-release
@@ -102,7 +102,7 @@ jobs:
         env: 
           RELEASE_VERSION: ${{ steps.release-version.outputs.release-version }}
           RUN_NUMBER: ${{ github.run_number }}
-        run: dotnet pack  -p:VersionPrefix="$RELEASE_VERSION" -p:VersionSuffix="rc.$RUN_NUMBER" --configuration Release --output ./output
+        run: dotnet pack ./dotnet/Instaplus.Net/ -p:VersionPrefix="$RELEASE_VERSION" -p:VersionSuffix="rc.$RUN_NUMBER" --configuration Release --output ./output
 
       - name: Publish pre-release package to NuGet
         run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.INSTAPLUS_NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json      
