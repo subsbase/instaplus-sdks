@@ -148,6 +148,7 @@ jobs:
           unzip instaplus.net.$LATEST_PRE_RELEASE_VERSION.nupkg -d ./package/
           rm -r "./package/package/"
           rm "./package/[Content_Types].xml"
+          rm "package/.signature.p7s"
           nuget pack ./package/Instaplus.Net.nuspec -Version "$STABLE_VERSION" -Properties Configuration=Release -OutputDirectory ./output
 
       - name: Publish stable package to NuGet
