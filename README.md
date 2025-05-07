@@ -2,10 +2,11 @@
 
 <h1 id="instaplus-api">InstaPlus.Api v1.0</h1>
 
-#Visualise Open API Specs
-[Open Api Spec](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/subsbase/instaplus-sdks/master/openapi-spec.yaml)
+Explore your OpenAPI spec in a visual format and generate a mock server instantly. View all endpoints, inspect request-response pairs, and simulate real API behavior—based on your specification.
 
-> Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
+<a href="https://beeceptor.com/openapi-mock-server/?url=https://raw.githubusercontent.com/subsbase/instaplus-sdks/refs/heads/master/openapi-spec.yaml" target="_blank">
+  <img src="https://cdn.beeceptor.com/assets/images/buttons/mock-openapi-with-beeceptor.png" alt="Mock These APIs Instantly" style="height: 75px;">
+</a>
 
 <h1 id="instaplus-api-grouporder">GroupOrder</h1>
 
