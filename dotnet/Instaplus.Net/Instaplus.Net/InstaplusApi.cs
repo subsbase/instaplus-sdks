@@ -10,7 +10,7 @@ namespace Instaplus.Net;
 
 public class InstaplusApi
 {
-    private readonly (string UserId, string Password) _creds;
+    private readonly (string UserId, string Password) _creds; // comment out to avoid warning
     private readonly HttpClient _httpClient;
     private readonly InstaplusApiOptions _options = new();
 
